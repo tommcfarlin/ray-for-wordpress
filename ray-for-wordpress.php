@@ -10,7 +10,7 @@
  * @package  RayForWP
  * @author   Tom McFarlin <tom@tommcfarlin.com>
  * @license  GPLv3 <https://www.gnu.org/licenses/gpl-3.0.en.html>
- * @link     https://github.com/tommcfarlin/wp-easy-email-export/
+ * @link     https://github.com/tommcfarlin/ray-for-wordpress/
  * @since    11 January 2022
  *
  * @wordpress-plugin
