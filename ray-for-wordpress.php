@@ -24,6 +24,8 @@
 
 namespace RayForWP;
 
+use WP_User;
+
 defined('WPINC') || die;
 require_once __DIR__ . '/vendor/autoload.php';
 
@@ -44,19 +46,30 @@ add_filter(
         $user = wp_get_current_user();
         ray($user);
 
-        ray(
-            get_user_meta($user->data->ID, 'show_admin_bar_front', true)
-        );
-
-        $capabilities = [];
-        foreach ($user->allcaps as $key => $value) {
-            $capabilities[$key] = $value;
-            if (15 < count($capabilities)) {
-                break;
-            }
-        }
-        ray()->table($capabilities);
-
+        ray()->table(getUserCapabilities($user));
+        ray()->trace();
         return $content;
     }
 );
+
+/**
+ * Retrieves the first 15 capabilities from the specified user.
+ *
+ * @param WP_User $user The user from which to retrieve the capabilities.
+ *
+ * @return array $capabilities The array of the first 15 capabilities from the user.
+ */
+function getUserCapabilities(WP_User $user): array
+{
+    ray()->caller();
+    $capabilities = [];
+
+    foreach ($user->allcaps as $key => $value) {
+        $capabilities[$key] = $value;
+        if (15 < count($capabilities)) {
+            break;
+        }
+    }
+
+    return $capabilities;
+}
