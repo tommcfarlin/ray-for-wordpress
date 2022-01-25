@@ -61,9 +61,12 @@ add_filter(
  */
 function getUserCapabilities(WP_User $user): array
 {
-    ray()->caller();
     $capabilities = [];
-
+    ray('Pausing execution...');
+    ray()->caller();
+    ray($user->data->ID);
+    ray($capabilities);
+    ray()->pause();
     foreach ($user->allcaps as $key => $value) {
         $capabilities[$key] = $value;
         if (15 < count($capabilities)) {
