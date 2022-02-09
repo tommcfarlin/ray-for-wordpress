@@ -21,9 +21,6 @@
 	"files.trimTrailingWhitespace": true,
 
 	// Settings Sync
-	"settingsSync.ignoredSettings": [
-		"-php.validate.executablePath"
-	],
 	"terminal.integrated.fontSize": 16,
     "workbench.startupEditor": "welcomePage",
     "editor.detectIndentation": false,
@@ -32,6 +29,4 @@
     "phpsab.fixerEnable": true,
     "phpsab.snifferShowSources": true,
     "phpsab.standard": "PSR12",
-
-    "security.workspace.trust.untrustedFiles": "open",
 }

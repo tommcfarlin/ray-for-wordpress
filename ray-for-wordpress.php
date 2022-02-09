@@ -29,6 +29,30 @@ use WP_User;
 defined('WPINC') || die;
 require_once __DIR__ . '/vendor/autoload.php';
 
+add_action(
+    'plugins_loaded', function () {
+        $number = 1000;
+        ray("Testing $number records...");
+        $records = getMetadataRecords($number, false);
+
+        if (true) {
+            ray()->measure()->green("Start foreach...");
+            foreach ($records as $record) {
+                $record;
+            }
+            ray()->measure()->green("...Done.");
+        } else {
+            ray()->measure()->red("Start array_map...");
+            array_map(
+                function ($record) {
+                    $record;
+                }, $records
+            );
+            ray()->measure()->red("...Done.");
+        }
+    }
+);
+
 add_filter(
     'the_content',
     /**
@@ -51,6 +75,42 @@ add_filter(
         return $content;
     }
 );
+
+/**
+ * Retrieves the first 100 results from the postmeta table.
+ * This function is used specifically for demonstration purposes
+ * of measuring performance.
+ *
+ * @param int  $number  The number of records to return.
+ * @param bool $measure Whether or not to meawsure the performance with Ray.
+ *
+ * @return array $results The array of results queried.
+ */
+function getMetadataRecords(int $number, bool $measure): array
+{
+    global $wpdb;
+    if ($measure) {
+        ray()->measure();
+    }
+
+    $results = $wpdb->get_results(
+        $wpdb->prepare(
+            "
+            SELECT *
+            FROM $wpdb->postmeta
+            LIMIT %d
+            ",
+            $number,
+        ),
+        ARRAY_A
+    );
+
+    if ($measure) {
+        ray()->measure();
+    }
+
+    return $results;
+}
 
 /**
  * Retrieves the first 15 capabilities from the specified user.
