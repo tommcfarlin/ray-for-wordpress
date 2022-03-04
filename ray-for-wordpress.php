@@ -29,110 +29,109 @@ use WP_User;
 defined('WPINC') || die;
 require_once __DIR__ . '/vendor/autoload.php';
 
+/**
+ * Iterates through the specified array of numbers.
+ *
+ * @param array $numbers The array of numbers through which we'll iteratoe.
+ *
+ * @return void.
+ */
+function iterateThroughArray(array $numbers)
+{
+    for ($i < 0; $i < count($numbers); $i++) {
+        $currentNumber = $numbers[$i];
+
+        // If the index is 10, pause execution.
+        if (10 === $i) {
+            ray("Pausing iterating at $i.");
+            ray()->pause();
+
+            // TODO This is where you can set custom code to run!
+            ray('Now we are resuming...');
+            ray(wp_get_current_user());
+
+            // Set $i to the length of the array then hit continue.
+            $i = count($numbers);
+            ray("Now we've set the index to: $i."); // Print this into Ray for good measure
+            ray()->separator();
+        }
+    }
+}
+
+/**
+ * Measures the time is takes to generate random numbers based on
+ * an incoming array of predefined size.
+ *
+ * This function would be called like measureNumbers([10, 20, 30]).
+ * If any non-integers are passed, then the function would exit whenever
+ * that value was found.
+ *
+ * @param  array $sizes The array of what size arrays to generate.
+ *
+ * @return void
+ */
+function measureNumbers(array $sizes)
+{
+    array_map(function ($size) {
+        if (!is_int($size)) {
+            return;
+        }
+
+        ray()->measure(); // Start measuring.
+
+        iterateThroughArray(
+            generateNumbers(0, 500, $size)
+        );
+
+        ray()->measure(); // Render the "Time since last call..."
+        ray()->separator();
+    }, $sizes);
+}
+
+/**
+ * Generates a set of random numbers up to the specified size.
+ *
+ * This uses PHP's `rand()` function to generate the numbers that
+ * are pushed into the array.
+ *
+ * @param  mixed $min The lower bound of the random numbers.
+ * @param  mixed $max The upper mount of the random numbers.
+ * @param  mixed $size The total number of random numbers to generate
+ *
+ * @return array $numbers The array of randomly generatored numbers.
+ */
+function generateNumbers(int $min, int $max, int $size): array
+{
+    $numbers = [];
+
+    for ($i = 0; $i < $size; $i++) {
+        $numbers[] = rand($min, $max);
+    }
+
+    return $numbers;
+}
+
 add_action(
-    'plugins_loaded', function () {
-        $number = 1000;
-        ray("Testing $number records...");
-        $records = getMetadataRecords($number, false);
-
-        if (true) {
-            ray()->measure()->green("Start foreach...");
-            foreach ($records as $record) {
-                $record;
-            }
-            ray()->measure()->green("...Done.");
-        } else {
-            ray()->measure()->red("Start array_map...");
-            array_map(
-                function ($record) {
-                    $record;
-                }, $records
-            );
-            ray()->measure()->red("...Done.");
+    'plugins_loaded',
+    function () {
+        if ('done' === get_option('ray-for-wordpress', true)) {
+            return;
         }
+
+        // First, we want to see who called this function.
+        ray()->caller();
+        ray()->separator();
+
+        measureNumbers([100, 250, 500, 750, 1000, 10000]);
+
+        update_option('ray-for-wordpress', 'done');
     }
 );
 
-add_filter(
-    'the_content',
-    /**
-     * Renders the content to the browser from the database.
-     *
-     * @param string $content The content coming from WordPress.
-     *
-     * @return string $content The processed content to be sent to the browser.
-     */
-    function (string $content): string {
-        if (!is_single()) {
-            return $content;
-        }
-
-        $user = wp_get_current_user();
-        ray($user);
-
-        ray()->table(getUserCapabilities($user));
-        ray()->trace();
-        return $content;
+add_action(
+    'shutdown',
+    function () {
+        ray('Deleting the ray-for-wordpress option since we are done.');
+        delete_option('ray-for-wordpress');
     }
 );
-
-/**
- * Retrieves the first 100 results from the postmeta table.
- * This function is used specifically for demonstration purposes
- * of measuring performance.
- *
- * @param int  $number  The number of records to return.
- * @param bool $measure Whether or not to meawsure the performance with Ray.
- *
- * @return array $results The array of results queried.
- */
-function getMetadataRecords(int $number, bool $measure): array
-{
-    global $wpdb;
-    if ($measure) {
-        ray()->measure();
-    }
-
-    $results = $wpdb->get_results(
-        $wpdb->prepare(
-            "
-            SELECT *
-            FROM $wpdb->postmeta
-            LIMIT %d
-            ",
-            $number,
-        ),
-        ARRAY_A
-    );
-
-    if ($measure) {
-        ray()->measure();
-    }
-
-    return $results;
-}
-
-/**
- * Retrieves the first 15 capabilities from the specified user.
- *
- * @param WP_User $user The user from which to retrieve the capabilities.
- *
- * @return array $capabilities The array of the first 15 capabilities from the user.
- */
-function getUserCapabilities(WP_User $user): array
-{
-    $capabilities = [];
-    ray('Pausing execution...');
-    ray()->caller();
-    ray($user->data->ID);
-    ray($capabilities);
-    ray()->pause();
-    foreach ($user->allcaps as $key => $value) {
-        $capabilities[$key] = $value;
-        if (15 < count($capabilities)) {
-            break;
-        }
-    }
-
-    return $capabilities;
-}
